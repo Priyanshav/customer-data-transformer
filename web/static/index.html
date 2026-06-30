@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Transform messy multi-source candidate data into clean, normalized, deduplicated profiles with provenance and confidence scoring." />
+<title>Candidate Data Transformer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: rgba(17, 24, 39, 0.7);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-violet: #8b5cf6;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  --gradient-card: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.08) 100%);
+  --shadow-glow: 0 0 60px rgba(59,130,246,0.15);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Ambient background glow ───────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  top: -40%; left: -20%;
+  width: 80%; height: 80%;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -30%; right: -20%;
+  width: 70%; height: 70%;
+  background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Layout ────────────────────────────────────────────────────── */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-top: 1rem;
+}
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: var(--radius-lg);
+  background: var(--gradient-hero);
+  margin-bottom: 1.25rem;
+  font-size: 1.6rem;
+  box-shadow: 0 8px 32px rgba(59,130,246,0.25);
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.header h1 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+.header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* ── Glass panels ──────────────────────────────────────────────── */
+.panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+  transition: border-color var(--transition);
+}
+.panel:hover { border-color: var(--border-hover); }
+
+.panel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.panel-title span { font-size: 1rem; }
+
+/* ── Drop zone ─────────────────────────────────────────────────── */
+#drop {
+  position: relative;
+  border: 2px dashed rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  overflow: hidden;
+}
+#drop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-card);
+  opacity: 0;
+  transition: opacity var(--transition);
+  border-radius: var(--radius-lg);
+}
+#drop:hover, #drop.over {
+  border-color: var(--accent-blue);
+  border-style: solid;
+}
+#drop:hover::before, #drop.over::before { opacity: 1; }
+#drop.over { box-shadow: var(--shadow-glow); }
+
+.drop-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+  display: inline-block;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.drop-text {
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.drop-text strong { color: var(--text-primary); font-weight: 600; }
+
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-top: 0.75rem;
+}
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: rgba(59,130,246,0.15);
+  color: var(--accent-blue);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.file-btn:hover {
+  background: rgba(59,130,246,0.25);
+  border-color: rgba(59,130,246,0.5);
+}
+.drop-formats {
+  position: relative;
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.format-tag {
+  padding: 0.2rem 0.55rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── File chips ────────────────────────────────────────────────── */
+.file-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.7rem;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--accent-blue);
+  font-weight: 500;
+  animation: chipIn 0.3s ease-out;
+}
+@keyframes chipIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+.file-chip-icon { font-size: 0.9rem; }
+.chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  line-height: 1;
+}
+.chip-remove:hover {
+  background: rgba(244,63,94,0.2);
+  color: var(--accent-rose);
+}
+
+/* ── Config textarea ───────────────────────────────────────────── */
+textarea {
+  width: 100%;
+  height: 140px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all var(--transition);
+}
+textarea::placeholder { color: var(--text-muted); }
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.btn:hover::after { opacity: 1; }
+
+.btn-primary {
+  background: var(--gradient-hero);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(59,130,246,0.4);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--accent-emerald), #059669);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+}
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(16,185,129,0.4);
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+}
+
+/* ── Spinner ───────────────────────────────────────────────────── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Results area ──────────────────────────────────────────────── */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.results-count {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.results-count span {
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.warnings-box {
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.82rem;
+  color: var(--accent-amber);
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+.warnings-box ul {
+  list-style: none;
+  padding: 0;
+}
+.warnings-box li { margin-bottom: 0.25rem; }
+.warnings-box li:last-child { margin-bottom: 0; }
+
+/* ── Profile cards ─────────────────────────────────────────────── */
+.profile-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all var(--transition);
+  animation: cardIn 0.4s ease-out both;
+}
+.profile-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.profile-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--gradient-card);
+  border: 2px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+.profile-info { flex: 1; min-width: 0; }
+.profile-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.profile-headline {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+/* ── Confidence ring ───────────────────────────────────────────── */
+.conf-ring {
+  position: relative;
+  width: 48px; height: 48px;
+  flex-shrink: 0;
+}
+.conf-ring svg { transform: rotate(-90deg); }
+.conf-ring circle {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.conf-ring .bg { stroke: rgba(255,255,255,0.06); }
+.conf-ring .fg { transition: stroke-dashoffset 1s ease-out; }
+.conf-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* ── Detail rows ───────────────────────────────────────────────── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.detail-item {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+}
+.detail-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+.has-prov {
+  border-bottom: 1px dotted rgba(255,255,255,0.4);
+  cursor: help;
+}
+.detail-value {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+.detail-value a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+.detail-value a:hover { text-decoration: underline; }
+
+/* ── Skills ────────────────────────────────────────────────────── */
+.skills-section {
+  margin-bottom: 1rem;
+}
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+.skill-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.skill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+  transition: all var(--transition);
+}
+.skill-pill:hover { transform: translateY(-1px); }
+.skill-pill.high {
+  background: rgba(16,185,129,0.1);
+  border-color: rgba(16,185,129,0.25);
+  color: var(--accent-emerald);
+}
+.skill-pill.mid {
+  background: rgba(245,158,11,0.1);
+  border-color: rgba(245,158,11,0.25);
+  color: var(--accent-amber);
+}
+.skill-pill.low {
+  background: rgba(244,63,94,0.1);
+  border-color: rgba(244,63,94,0.25);
+  color: var(--accent-rose);
+}
+.skill-conf {
+  font-size: 0.65rem;
+  opacity: 0.75;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Timeline (experience / education) ─────────────────────────── */
+.timeline {
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border-subtle);
+}
+.timeline-item {
+  position: relative;
+  padding: 0.5rem 0 0.5rem 1rem;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -1.32rem;
+  top: 0.85rem;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-violet);
+  border: 2px solid var(--bg-primary);
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.timeline-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.timeline-dates {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 0.15rem;
+}
+
+/* ── Provenance toggle ─────────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: 'Inter', sans-serif;
+}
+.toggle-btn:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-hover);
+}
+
+/* ── JSON / provenance ─────────────────────────────────────────── */
+.json-block {
+  display: none;
+  margin-top: 0.75rem;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  max-height: 320px;
+  overflow: auto;
+  animation: fadeIn 0.25s ease-out;
+}
+.json-block.open { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.json-block pre {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Empty / error states ──────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.empty-state p { font-size: 0.9rem; }
+
+.error-msg {
+  background: rgba(244,63,94,0.08);
+  border: 1px solid rgba(244,63,94,0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: var(--accent-rose);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .container { padding: 1rem; }
+  .header h1 { font-size: 1.4rem; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .profile-top { flex-wrap: wrap; }
+}
+
+/* ── Forms & Controls ──────────────────────────────────────────── */
+.form-label {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; color: var(--text-primary);
+  cursor: pointer;
+}
+.form-section-title {
+  font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+.builder-panel {
+  display: none;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.25s ease-out;
+}
+.builder-panel.open { display: block; }
+.form-group { margin-bottom: 1.25rem; }
+.form-group:last-child { margin-bottom: 0; }
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+select.form-input {
+  background: rgba(0,0,0,0.2);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+}
+select.form-input:focus { border-color: var(--accent-blue); }
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-icon">⚡</div>
+    <h1>Candidate Data Transformer</h1>
+    <p>Transform messy multi-source candidate data into clean, normalized, deduplicated profiles — all in memory, nothing stored.</p>
+  </header>
+
+  <!-- ── Upload panel ──────────────────────────────────────────── -->
+  <section class="panel" id="upload-panel">
+    <div class="panel-title"><span>📁</span> Source Files</div>
+    <div id="drop">
+      <div class="drop-icon">☁️</div>
+      <div class="drop-text">
+        <strong>Drag & drop files here</strong><br>
+        or browse to select
+      </div>
+      <div class="file-input-wrapper">
+        <div class="file-btn">📎 Choose files</div>
+        <input type="file" id="file-input" multiple accept=".csv,.json,.pdf,.txt" />
+      </div>
+      <div class="drop-formats">
+        <span class="format-tag">.csv</span>
+        <span class="format-tag">.json</span>
+        <span class="format-tag">.pdf</span>
+        <span class="format-tag">.txt</span>
+      </div>
+    </div>
+    <div class="file-chips" id="file-chips"></div>
+  </section>
+
+  <!-- ── Config panel ──────────────────────────────────────────── -->
+  <section class="panel">
+    <div class="panel-title"><span>⚙️</span> Output Config <span style="font-size:0.7rem; color:var(--text-muted); text-transform:none; letter-spacing:0; font-weight:400;">(optional)</span></div>
+    
+    <div style="margin-bottom: 1rem;">
+      <label class="form-label" style="font-weight:600;">
+        <input type="checkbox" id="useBuilder" checked> Build a custom output config
+      </label>
+    </div>
+
+    <div class="builder-panel open" id="config-builder">
+      <div class="form-group">
+        <div class="form-section-title">Include fields</div>
+        <div class="checkbox-grid" id="field-checkboxes" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+          <label class="form-label"><input type="checkbox" value="full_name" checked> <span style="flex:1">full_name</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="full_name"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="headline" checked> <span style="flex:1">headline</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="headline"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="emails" checked> <span style="flex:1">emails</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="emails"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="phones" checked> <span style="flex:1">phones</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="phones"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="location" checked> <span style="flex:1">location</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="location"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="links" checked> <span style="flex:1">links</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="links"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="skills" checked> <span style="flex:1">skills</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="skills"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="experience" checked> <span style="flex:1">experience</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="experience"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="education" checked> <span style="flex:1">education</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="education"> req</label></label>
+          <label class="form-label"><input type="checkbox" value="years_experience" checked> <span style="flex:1">years_experience</span> <label style="font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:0.2rem;"><input type="checkbox" class="req-check" value="years_experience"> req</label></label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><input type="checkbox" id="flattenContacts"> Flatten contacts (adds primary_email and phone)</label>
+        <div style="margin-left: 1.5rem; margin-top: 0.5rem; display:flex; gap:1rem;" id="flatten-reqs">
+          <label class="form-label"><input type="checkbox" class="req-check" value="primary_email"> require primary_email</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-section-title">Normalize</div>
+        <div class="checkbox-grid">
+          <label class="form-label"><input type="checkbox" id="normPhones"> Phones to E.164</label>
+          <label class="form-label"><input type="checkbox" id="normSkills"> Skills to canonical</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-section-title">Metadata</div>
+        <div class="checkbox-grid">
+          <label class="form-label"><input type="checkbox" id="incConf"> Include confidence</label>
+          <label class="form-label"><input type="checkbox" id="incProv"> Include provenance</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-section-title">On missing behavior</div>
+        <select class="form-input" id="onMissing">
+          <option value="null">null (return field as null)</option>
+          <option value="omit">omit (leave field out)</option>
+          <option value="error">error (drop record)</option>
+        </select>
+      </div>
+    </div>
+
+    <details>
+      <summary style="font-size:0.8rem; color:var(--text-muted); cursor:pointer; margin-bottom:0.5rem; padding: 0.5rem; border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); display: inline-block;">⚙️ Advanced: Raw JSON Override</summary>
+      <textarea id="config" placeholder='Paste raw JSON here to override the UI builder completely. (Leave blank to use the visual builder)' style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); color:var(--text-secondary); padding:0.75rem; font-family:'JetBrains Mono', monospace; font-size:0.75rem; resize:vertical; margin-top:0.5rem;"></textarea>
+    </details>
+  </section>
+
+
+  <!-- ── Actions ───────────────────────────────────────────────── -->
+  <div class="actions">
+    <button class="btn btn-primary" id="btn-transform" disabled>
+      <span id="btn-icon">🚀</span>
+      <span id="btn-text">Transform</span>
+    </button>
+    <button class="btn btn-success" id="btn-download" style="display:none">
+      ⬇️ Download JSON
+    </button>
+    <button class="btn btn-ghost" id="btn-clear" style="display:none">
+      🗑️ Clear
+    </button>
+  </div>
+
+  <!-- ── Output ────────────────────────────────────────────────── -->
+  <div id="output" style="margin-top:1.5rem"></div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+const picked = [];
+let lastResult = null;
+
+// ── DOM refs ───────────────────────────────────────────────────────
+const dropZone   = document.getElementById('drop');
+const fileInput  = document.getElementById('file-input');
+const chipsEl    = document.getElementById('file-chips');
+const btnTransform = document.getElementById('btn-transform');
+const btnDownload  = document.getElementById('btn-download');
+const btnClear     = document.getElementById('btn-clear');
+const outputEl     = document.getElementById('output');
+
+// ── File handling ──────────────────────────────────────────────────
+function addFiles(fileList) {
+  for (const f of fileList) {
+    // Deduplicate by name+size to avoid re-adds on repeated drag-drops.
+    if (!picked.some(p => p.name === f.name && p.size === f.size)) {
+      picked.push(f);
+    }
+  }
+  renderChips();
+}
+
+function removeFile(index) {
+  picked.splice(index, 1);
+  renderChips();
+}
+
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (ext === 'csv')  return '📊';
+  if (ext === 'json') return '📋';
+  if (ext === 'pdf')  return '📄';
+  return '📝';
+}
+
+function renderChips() {
+  btnTransform.disabled = picked.length === 0;
+  if (!picked.length) { chipsEl.innerHTML = ''; return; }
+  chipsEl.innerHTML = picked.map((f, i) =>
+    `<span class="file-chip">
+       <span class="file-chip-icon">${fileIcon(f.name)}</span>
+       ${f.name}
+       <button class="chip-remove" data-idx="${i}" title="Remove">✕</button>
+     </span>`
+  ).join('');
+}
+
+chipsEl.addEventListener('click', e => {
+  const btn = e.target.closest('.chip-remove');
+  if (btn) removeFile(parseInt(btn.dataset.idx));
+});
+
+fileInput.addEventListener('change', e => { addFiles(e.target.files); fileInput.value = ''; });
+
+['dragenter','dragover'].forEach(ev =>
+  dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('over'); })
+);
+['dragleave','drop'].forEach(ev =>
+  dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('over'); })
+);
+dropZone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+// ── Confidence helpers ─────────────────────────────────────────────
+function confColor(c) {
+  if (c >= 0.8) return 'var(--accent-emerald)';
+  if (c >= 0.5) return 'var(--accent-amber)';
+  return 'var(--accent-rose)';
+}
+
+function confRing(conf) {
+  const pct = Math.round(conf * 100);
+  const r = 18, circ = 2 * Math.PI * r;
+  const dash = circ * conf;
+  return `<div class="conf-ring" title="Confidence: ${pct}%">
+    <svg width="48" height="48" viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="${r}" />
+      <circle class="fg" cx="24" cy="24" r="${r}"
+        stroke="${confColor(conf)}"
+        stroke-dasharray="${circ}"
+        stroke-dashoffset="${circ - dash}" />
+    </svg>
+    <div class="conf-label" style="color:${confColor(conf)}">${pct}%</div>
+  </div>`;
+}
+
+// ── Profile card builder ───────────────────────────────────────────
+function initials(name) {
+  if (!name) return '?';
+  return name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function buildProfileCard(p, idx) {
+  const conf = (p._confidence && p._confidence.overall) ?? p.overall_confidence ?? 0;
+  const name = p.full_name || p.primary_email || '(unnamed)';
+  const headline = p.headline || p.title || '';
+
+  // Build provenance map
+  const provMap = {};
+  if (p.provenance && Array.isArray(p.provenance)) {
+    for (const item of p.provenance) {
+      if (!item.field) continue;
+      const baseField = item.field.split('.')[0];
+      if (!provMap[baseField]) provMap[baseField] = new Set();
+      provMap[baseField].add(`${item.source} (${item.method})`);
+    }
+  }
+
+  function provAttr(field) {
+    if (!provMap[field] || provMap[field].size === 0) return '';
+    const items = Array.from(provMap[field]).join(', ');
+    return ` title="Source: ${escapeHtml(items)}" class="has-prov"`;
+  }
+
+  // Detail items
+  let details = '';
+  const emails = p.emails || (p.primary_email ? [p.primary_email] : []);
+  if (emails.length) {
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('emails')}>📧 Email</span></div>
+      <div class="detail-value">${emails.map(e => `<a href="mailto:${e}">${e}</a>`).join(', ')}</div>
+    </div>`;
+  }
+  const phones = p.phones || (p.phone ? [p.phone] : []);
+  if (phones.length) {
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('phones')}>📱 Phone</span></div>
+      <div class="detail-value">${phones.join(', ')}</div>
+    </div>`;
+  }
+  const loc = p.location;
+  if (loc && (loc.city || loc.country)) {
+    const parts = [loc.city, loc.region, loc.country].filter(Boolean);
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('location')}>📍 Location</span></div>
+      <div class="detail-value">${parts.join(', ')}</div>
+    </div>`;
+  } else if (p.country) {
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('location')}>📍 Country</span></div>
+      <div class="detail-value">${p.country}</div>
+    </div>`;
+  }
+  const links = p.links || {};
+  if (links.linkedin) {
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('links')}>🔗 LinkedIn</span></div>
+      <div class="detail-value"><a href="https://${links.linkedin}" target="_blank">${links.linkedin}</a></div>
+    </div>`;
+  }
+  if (links.github) {
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('links')}>💻 GitHub</span></div>
+      <div class="detail-value"><a href="https://${links.github}" target="_blank">${links.github}</a></div>
+    </div>`;
+  }
+  if (p.years_experience != null) {
+    details += `<div class="detail-item">
+      <div class="detail-label"><span${provAttr('experience')}>⏳ Experience</span></div>
+      <div class="detail-value">${p.years_experience} year${p.years_experience !== 1 ? 's' : ''}</div>
+    </div>`;
+  }
+
+  // Skills
+  let skillsHtml = '';
+  const skills = p.skills || [];
+  if (skills.length) {
+    const pills = skills.map(s => {
+      const name = typeof s === 'string' ? s : s.name;
+      return `<span class="skill-pill high">${name}</span>`;
+    }).join('');
+    skillsHtml = `<div class="skills-section">
+      <div class="section-label"><span${provAttr('skills')}>🛠️ Skills</span></div>
+      <div class="skill-pills">${pills}</div>
+    </div>`;
+  }
+
+  // Experience timeline
+  let expHtml = '';
+  const exp = p.experience || [];
+  if (exp.length) {
+    const items = exp.map(e => {
+      const dates = [e.start, e.end || 'Present'].filter(Boolean).join(' → ');
+      return `<div class="timeline-item">
+        <div class="timeline-title">${e.title || 'Unknown Role'}</div>
+        <div class="timeline-sub">${e.company || 'Unknown Company'}</div>
+        ${dates && dates !== 'Present' ? `<div class="timeline-dates">${dates}</div>` : ''}
+      </div>`;
+    }).join('');
+    expHtml = `<div class="section-label" style="margin-bottom:0.5rem"><span${provAttr('experience')}>💼 Experience</span></div>
+      <div class="timeline">${items}</div>`;
+  }
+
+  // Education timeline
+  let eduHtml = '';
+  const edu = p.education || [];
+  if (edu.length) {
+    const items = edu.map(e => {
+      const degree = [e.degree, e.field].filter(Boolean).join(' in ');
+      const subInfo = [e.end_year, e.score ? `Score: ${e.score}` : null].filter(Boolean).join(' | ');
+      return `<div class="timeline-item">
+        <div class="timeline-title">${e.institution || 'Unknown'}</div>
+        ${degree ? `<div class="timeline-sub">${degree}</div>` : ''}
+        ${subInfo ? `<div class="timeline-dates">${subInfo}</div>` : ''}
+      </div>`;
+    }).join('');
+    eduHtml = `<div class="section-label" style="margin-bottom:0.5rem"><span${provAttr('education')}>🎓 Education</span></div>
+      <div class="timeline">${items}</div>`;
+  }
+
+  const cardId = `card-${idx}`;
+  return `<div class="profile-card" style="animation-delay:${idx * 0.08}s">
+    <div class="profile-top">
+      <div class="profile-avatar">${initials(p.full_name)}</div>
+      <div class="profile-info">
+        <div class="profile-name"><span${provAttr('full_name')}>${name}</span></div>
+        ${headline ? `<div class="profile-headline">${headline}</div>` : ''}
+      </div>
+      ${confRing(conf)}
+    </div>
+    ${details ? `<div class="detail-grid">${details}</div>` : ''}
+    ${skillsHtml}
+    ${expHtml}
+    ${eduHtml}
+    <div class="toggle-row">
+      <button class="toggle-btn" onclick="toggleJson('${cardId}')">
+        ⟨/⟩ Raw JSON
+      </button>
+    </div>
+    <div class="json-block" id="${cardId}">
+      <pre>${escapeHtml(JSON.stringify(p, null, 2))}</pre>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleJson(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Config Builder ─────────────────────────────────────────────────
+document.getElementById('useBuilder').addEventListener('change', (e) => {
+  document.getElementById('config-builder').classList.toggle('open', e.target.checked);
+});
+
+function builtConfig() {
+  if (!document.getElementById('useBuilder').checked) return "";
+
+  const fields = [];
+  const reqBoxes = Array.from(document.querySelectorAll('.req-check:checked')).map(b => b.value);
+
+  const getType = (path) => {
+    if (path === 'skills') return 'string[]';
+    if (['full_name', 'headline', 'primary_email', 'phone', 'location_raw'].includes(path)) return 'string';
+    return 'any';
+  };
+
+  const boxes = document.querySelectorAll('#field-checkboxes input[type="checkbox"]:not(.req-check):checked');
+  for (const box of boxes) {
+    const path = box.value;
+    const f = { path, type: getType(path) };
+    if (reqBoxes.includes(path)) f.required = true;
+    
+    // Add normalization if toggled
+    if (path === 'phones' && document.getElementById('normPhones').checked) {
+      f.normalize = 'E164';
+    }
+    if (path === 'skills') {
+      f.from = 'skills[].name';
+      if (document.getElementById('normSkills').checked) {
+        f.normalize = 'canonical';
+      }
+    }
+    fields.push(f);
+  }
+
+  // Flatten contacts
+  if (document.getElementById('flattenContacts').checked) {
+    const emailF = { path: 'primary_email', from: 'emails[0]', type: 'string' };
+    if (reqBoxes.includes('primary_email')) emailF.required = true;
+    fields.push(emailF);
+
+    const phoneF = { path: 'phone', from: 'phones[0]', type: 'string' };
+    if (document.getElementById('normPhones').checked) phoneF.normalize = 'E164';
+    fields.push(phoneF);
+  }
+
+  const conf = { fields };
+
+  // Metadata
+  if (document.getElementById('incConf').checked) conf.include_confidence = true;
+  if (document.getElementById('incProv').checked) conf.include_provenance = true;
+
+  // On missing
+  const missing = document.getElementById('onMissing').value;
+  if (missing !== 'null') {
+    conf.on_missing = missing;
+  }
+
+  return JSON.stringify(conf);
+}
+
+// ── Transform action ───────────────────────────────────────────────
+btnTransform.addEventListener('click', async () => {
+  if (!picked.length) return;
+
+  // Set loading state
+  btnTransform.disabled = true;
+  document.getElementById('btn-icon').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('btn-text').textContent = 'Processing…';
+  outputEl.innerHTML = '';
+
+  const fd = new FormData();
+  picked.forEach(f => fd.append('files', f));
+  
+  const rawText = document.getElementById('config').value.trim();
+  fd.append('config', rawText || builtConfig());
+
+  let res;
+  try {
+    res = await fetch('/api/transform', { method: 'POST', body: fd });
+  } catch (err) {
+    outputEl.innerHTML = `<div class="error-msg">⚠️ Network error: ${err}</div>`;
+    resetButton();
+    return;
+  }
+
+  const data = await res.json();
+  if (!res.ok) {
+    outputEl.innerHTML = `<div class="error-msg">⚠️ ${data.error || 'Something went wrong'}</div>`;
+    resetButton();
+    return;
+  }
+
+  lastResult = data;
+  btnDownload.style.display = 'inline-flex';
+  btnClear.style.display = 'inline-flex';
+  resetButton();
+
+  // Warnings
+  let html = '';
+  if (data.warnings && data.warnings.length) {
+    html += `<div class="warnings-box">
+      <span>⚠️</span>
+      <ul>${data.warnings.map(w => `<li>${w}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // Results header
+  html += `<div class="results-header">
+    <div class="results-count"><span>${data.count}</span> profile${data.count !== 1 ? 's' : ''} found</div>
+  </div>`;
+
+  // Profile cards
+  if (data.profiles && data.profiles.length) {
+    html += data.profiles.map((p, i) => buildProfileCard(p, i)).join('');
+  } else {
+    html += `<div class="empty-state">
+      <div class="icon">🔍</div>
+      <p>No profiles could be extracted from the uploaded files.</p>
+    </div>`;
+  }
+
+  outputEl.innerHTML = html;
+});
+
+function resetButton() {
+  btnTransform.disabled = picked.length === 0;
+  document.getElementById('btn-icon').innerHTML = '🚀';
+  document.getElementById('btn-text').textContent = 'Transform';
+}
+
+// ── Download ───────────────────────────────────────────────────────
+btnDownload.addEventListener('click', () => {
+  if (!lastResult) return;
+  const blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'profiles.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ── Clear ──────────────────────────────────────────────────────────
+btnClear.addEventListener('click', () => {
+  picked.length = 0;
+  lastResult = null;
+  renderChips();
+  outputEl.innerHTML = '';
+  btnDownload.style.display = 'none';
+  btnClear.style.display = 'none';
+  document.getElementById('config').value = '';
+});
+</script>
+</body>
+</html>

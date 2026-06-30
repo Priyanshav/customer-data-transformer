@@ -1,0 +1,19 @@
+{
+  "candidates": [
+    {
+      "candidateName": "Jane Doe",
+      "contact": { "emailAddress": "jane.doe@example.com", "phoneNumber": "+14155550101" },
+      "currentRole": "Staff Software Engineer",
+      "employer": "Acme Corporation",
+      "location": { "city": "San Francisco", "country": "United States", "region": "CA" },
+      "skillSet": ["JavaScript", "Go", "k8s"],
+      "workHistory": [
+        { "organization": "Acme Corporation", "position": "Staff Software Engineer", "from": "2021-03", "to": "present" },
+        { "organization": "Initech", "position": "Software Engineer", "from": "2018-06", "to": "2021-02" }
+      ],
+      "education": [
+        { "school": "MIT", "degree": "BS", "fieldOfStudy": "Computer Science", "graduationYear": 2018 }
+      ]
+    }
+  ]
+}

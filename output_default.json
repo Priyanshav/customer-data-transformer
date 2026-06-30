@@ -1,0 +1,294 @@
+[
+  {
+    "candidate_id": "488bd7b5ffba4d39f472b76d5399477146c2a55dab17f26828fa716f66bba900",
+    "full_name": "Priyanshu Kumar",
+    "emails": [
+      "priyanshavkmr6@gmail.com"
+    ],
+    "phones": [
+      "+917979923120"
+    ],
+    "location": {
+      "country": "IN"
+    },
+    "skills": [
+      {
+        "name": "Java",
+        "confidence": 1.0
+      },
+      {
+        "name": "SQL",
+        "confidence": 1.0
+      },
+      {
+        "name": "Cybersecurity",
+        "confidence": 1.0
+      },
+      {
+        "name": "Python",
+        "confidence": 1.0
+      },
+      {
+        "name": "JavaScript",
+        "confidence": 1.0
+      }
+    ],
+    "experience": [
+      {
+        "company": "Xorvo Tech",
+        "title": "Security Intern",
+        "start": "2026-02",
+        "end": "2026-08"
+      }
+    ],
+    "years_experience": 0.5,
+    "overall_confidence": 0.98,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "first_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "first_name",
+        "source": "resume",
+        "method": "inferred"
+      },
+      {
+        "field": "last_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "last_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "last_name",
+        "source": "resume",
+        "method": "inferred"
+      },
+      {
+        "field": "email",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "email",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "email",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "phone",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "phone",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "location",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "skill",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "skill",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "company",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "job_title",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "start_date",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "end_date",
+        "source": "ats",
+        "method": "mapped"
+      }
+    ]
+  },
+  {
+    "candidate_id": "2f05d4b689d270cafb02285f35f44866f7dc8a2d368a3f9d1124373eeab31fb1",
+    "full_name": "Bad Record",
+    "emails": null,
+    "phones": null,
+    "location": null,
+    "skills": null,
+    "experience": null,
+    "years_experience": null,
+    "overall_confidence": 1.0,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "last_name",
+        "source": "ats",
+        "method": "mapped"
+      }
+    ]
+  },
+  {
+    "candidate_id": "86e0b9e56c17cc4d12387e1949b85053fbe73bc3ce5a1188713a9d300cc6133d",
+    "full_name": "Jane Doe",
+    "emails": [
+      "jane.doe@example.com"
+    ],
+    "phones": null,
+    "location": {
+      "country": "US"
+    },
+    "skills": [
+      {
+        "name": "Python",
+        "confidence": 1.0
+      },
+      {
+        "name": "AWS",
+        "confidence": 1.0
+      },
+      {
+        "name": "React",
+        "confidence": 1.0
+      }
+    ],
+    "experience": [
+      {
+        "company": "TechCorp",
+        "title": "Senior Engineer",
+        "start": "2020-01",
+        "end": "2023-05"
+      }
+    ],
+    "years_experience": 3.3,
+    "overall_confidence": 0.98,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "last_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "email",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "location",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "skill",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "company",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "job_title",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "start_date",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "end_date",
+        "source": "csv",
+        "method": "direct"
+      }
+    ]
+  },
+  {
+    "candidate_id": "795b6904e54f82411df4b0e27a373a55eea3f9d66dac5a9bce1dd92f7b401da5",
+    "full_name": "Garbage Record",
+    "emails": null,
+    "phones": null,
+    "location": null,
+    "skills": [
+      {
+        "name": "Invalid",
+        "confidence": 1.0
+      }
+    ],
+    "experience": [
+      {
+        "company": "Bad",
+        "title": "Bad",
+        "start": null,
+        "end": null
+      }
+    ],
+    "years_experience": null,
+    "overall_confidence": 1.0,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "last_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "skill",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "company",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "job_title",
+        "source": "csv",
+        "method": "direct"
+      }
+    ]
+  }
+]

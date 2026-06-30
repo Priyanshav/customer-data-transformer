@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Data Transformer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Candidate Data Transformer</h1>
+        <p>Merge messy candidate profiles into one trusted, canonical record.</p>
+    </header>
+
+    <main>
+        <section class="upload-section">
+            <h2>1. Upload Sources</h2>
+            <div id="drop-zone" class="drop-zone">
+                <p>Drag and drop files here (CSV, JSON, PDF)</p>
+                <input type="file" id="file-input" multiple accept=".csv, .json, .pdf">
+            </div>
+            <ul id="file-list" class="file-list"></ul>
+        </section>
+
+        <section class="config-section">
+            <h2>2. Output Configuration</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="simple">Simple Config</button>
+                <button class="tab-btn" data-tab="advanced">Raw JSON Config</button>
+            </div>
+
+            <div id="simple-config" class="tab-content active">
+                <div class="form-group">
+                    <label><input type="checkbox" id="inc_confidence" checked> Include Confidence & Provenance</label>
+                </div>
+                <div class="form-group">
+                    <label>Missing Fields Policy:</label>
+                    <select id="on_missing">
+                        <option value="null">Set to Null</option>
+                        <option value="omit">Omit Field</option>
+                        <option value="error">Throw Error</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="advanced-config" class="tab-content">
+                <p>Paste a complete JSON config to override the simple settings.</p>
+                <textarea id="raw-config"></textarea>
+                <button id="reset-config" class="btn secondary">Reset to Default</button>
+            </div>
+        </section>
+
+        <section class="action-section">
+            <button id="transform-btn" class="btn primary">Transform Data</button>
+            <div id="error-message" class="error-msg hidden"></div>
+        </section>
+
+        <section class="results-section hidden" id="results-section">
+            <div class="results-header">
+                <h2>Canonical Profiles</h2>
+                <button id="download-btn" class="btn secondary">Download JSON</button>
+            </div>
+            <div id="profiles-container"></div>
+            
+            <details class="raw-json-details">
+                <summary>View Raw JSON</summary>
+                <pre id="raw-json-output"></pre>
+            </details>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

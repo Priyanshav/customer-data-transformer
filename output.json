@@ -1,0 +1,344 @@
+[
+  {
+    "candidate_id": "40ab88753a26ae356c6d23bb648ebf4aa58027d88e0f8c73a5ca1b611d8c7987",
+    "full_name": "Harish Pal",
+    "emails": [
+      "harish.pal@example.com"
+    ],
+    "phones": null,
+    "location": null,
+    "links": {
+      "linkedin": null,
+      "github": null,
+      "portfolio": null,
+      "other": []
+    },
+    "headline": null,
+    "skills": [
+      {
+        "name": "C++",
+        "confidence": 0.6
+      },
+      {
+        "name": "Java",
+        "confidence": 0.6
+      },
+      {
+        "name": "Python",
+        "confidence": 0.6
+      },
+      {
+        "name": "FastAPI",
+        "confidence": 0.6
+      },
+      {
+        "name": "Node.js",
+        "confidence": 0.6
+      },
+      {
+        "name": "PostgreSQL",
+        "confidence": 0.6
+      },
+      {
+        "name": "MongoDB",
+        "confidence": 0.6
+      },
+      {
+        "name": "Redis",
+        "confidence": 0.6
+      },
+      {
+        "name": "Docker",
+        "confidence": 0.6
+      },
+      {
+        "name": "Kafka",
+        "confidence": 0.6
+      }
+    ],
+    "experience": [
+      {
+        "company": "LetsGrowMore Remote",
+        "title": "Python Developer",
+        "start": "2024-07",
+        "end": "2024-08",
+        "summary": null
+      }
+    ],
+    "education": [
+      {
+        "institution": "Noida Institute of Engineering Technology",
+        "degree": "B. Tech in CSE-AI",
+        "field_of_study": "",
+        "end_year": "2023"
+      }
+    ],
+    "years_experience": 0.1,
+    "overall_confidence": 0.58,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "resume",
+        "method": "inferred"
+      },
+      {
+        "field": "last_name",
+        "source": "resume",
+        "method": "inferred"
+      },
+      {
+        "field": "email",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "skill",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "company",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "job_title",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "start_date",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "end_date",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "edu_institution",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "edu_degree",
+        "source": "resume",
+        "method": "parsed"
+      },
+      {
+        "field": "edu_end_year",
+        "source": "resume",
+        "method": "parsed"
+      }
+    ]
+  },
+  {
+    "candidate_id": "dabd15b7bf95de71651d705d8da2c65ba56ec5ddc4adf9fd2c7f6f9a1cab08a7",
+    "full_name": "Rahul Verma",
+    "emails": [
+      "rahul.verma@example.com"
+    ],
+    "phones": [
+      "+919123456780"
+    ],
+    "location": null,
+    "links": {
+      "linkedin": null,
+      "github": null,
+      "portfolio": null,
+      "other": []
+    },
+    "headline": null,
+    "skills": [
+      {
+        "name": "Java",
+        "confidence": 1.0
+      },
+      {
+        "name": "Spring Boot",
+        "confidence": 1.0
+      },
+      {
+        "name": "MySQL",
+        "confidence": 1.0
+      },
+      {
+        "name": "Docker",
+        "confidence": 1.0
+      },
+      {
+        "name": "AWS",
+        "confidence": 1.0
+      }
+    ],
+    "experience": [
+      {
+        "company": "",
+        "title": "Java Backend Developer",
+        "start": null,
+        "end": null,
+        "summary": null
+      }
+    ],
+    "education": null,
+    "years_experience": null,
+    "overall_confidence": 0.97,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "first_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "last_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "last_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "email",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "email",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "phone",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "phone",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "skill",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "job_title",
+        "source": "ats",
+        "method": "mapped"
+      }
+    ]
+  },
+  {
+    "candidate_id": "c8103431bb569250bcb4b63729e13aceee9f79da4a7a3400b72b5709b5d49084",
+    "full_name": "Vikram Singh",
+    "emails": [
+      "vikram.singh@example.com"
+    ],
+    "phones": [
+      "+919345678120"
+    ],
+    "location": null,
+    "links": {
+      "linkedin": null,
+      "github": null,
+      "portfolio": null,
+      "other": []
+    },
+    "headline": null,
+    "skills": [
+      {
+        "name": "Python",
+        "confidence": 1.0
+      },
+      {
+        "name": "SQL",
+        "confidence": 1.0
+      },
+      {
+        "name": "Power BI",
+        "confidence": 1.0
+      },
+      {
+        "name": "Excel",
+        "confidence": 1.0
+      },
+      {
+        "name": "Pandas",
+        "confidence": 1.0
+      }
+    ],
+    "experience": [
+      {
+        "company": "",
+        "title": "Data Analyst",
+        "start": null,
+        "end": null,
+        "summary": null
+      }
+    ],
+    "education": null,
+    "years_experience": null,
+    "overall_confidence": 0.97,
+    "provenance": [
+      {
+        "field": "first_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "first_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "last_name",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "last_name",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "email",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "email",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "phone",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "phone",
+        "source": "ats",
+        "method": "mapped"
+      },
+      {
+        "field": "skill",
+        "source": "csv",
+        "method": "direct"
+      },
+      {
+        "field": "job_title",
+        "source": "csv",
+        "method": "direct"
+      }
+    ]
+  }
+]

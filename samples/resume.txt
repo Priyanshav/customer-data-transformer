@@ -1,0 +1,14 @@
+Jane Doe
+Staff Software Engineer
+San Francisco, CA, USA
+jane.doe@example.com | +1 (415) 555-0101 | github.com/janedoe | linkedin.com/in/janedoe
+
+Skills
+Python, JavaScript, TypeScript, Kubernetes, PostgreSQL
+
+Experience
+Acme Corporation - Staff Software Engineer (Mar 2021 - Present)
+Initech - Software Engineer (Jun 2018 - Feb 2021)
+
+Education
+MIT - BS in Computer Science, 2018
