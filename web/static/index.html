@@ -824,8 +824,8 @@ select.form-input:focus { border-color: var(--accent-blue); }
       <div class="form-group">
         <div class="form-section-title">Metadata</div>
         <div class="checkbox-grid">
-          <label class="form-label"><input type="checkbox" id="incConf"> Include confidence</label>
-          <label class="form-label"><input type="checkbox" id="incProv"> Include provenance</label>
+          <label class="form-label"><input type="checkbox" id="incConf" checked> Include confidence</label>
+          <label class="form-label"><input type="checkbox" id="incProv" checked> Include provenance</label>
         </div>
       </div>
 
@@ -965,8 +965,9 @@ function buildProfileCard(p, idx) {
 
   // Build provenance map
   const provMap = {};
-  if (p.provenance && Array.isArray(p.provenance)) {
-    for (const item of p.provenance) {
+  const provArray = p.provenance || p._provenance;
+  if (provArray && Array.isArray(provArray)) {
+    for (const item of provArray) {
       if (!item.field) continue;
       const baseField = item.field.split('.')[0];
       if (!provMap[baseField]) provMap[baseField] = new Set();

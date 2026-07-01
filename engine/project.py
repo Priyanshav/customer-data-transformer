@@ -48,10 +48,10 @@ def project(record, config):
     for fdef in config.get("fields", []):
         path = fdef.get("from", fdef["path"])
         out[fdef["path"]] = _apply_norm(resolve_path(record, path), fdef.get("normalize"))
-    if config.get("include_confidence"):
+    if config.get("include_confidence", True):
         out["_confidence"] = {"overall": record.get("overall_confidence"),
                               "fields": record.get("field_confidence", {})}
-    if config.get("include_provenance"):
+    if config.get("include_provenance", True):
         out["_provenance"] = record.get("provenance")
     return out
 
