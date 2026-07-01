@@ -959,7 +959,7 @@ function initials(name) {
 }
 
 function buildProfileCard(p, idx) {
-  const conf = (p._confidence && p._confidence.overall) ?? p.overall_confidence ?? 0;
+  const conf = (p._confidence && p._confidence.overall) ?? p.overall_confidence;
   const name = p.full_name || p.primary_email || '(unnamed)';
   const headline = p.headline || p.title || '';
 
@@ -1085,7 +1085,7 @@ function buildProfileCard(p, idx) {
         <div class="profile-name"><span${provAttr('full_name')}>${name}</span></div>
         ${headline ? `<div class="profile-headline">${headline}</div>` : ''}
       </div>
-      ${confRing(conf)}
+      ${conf !== undefined ? confRing(conf) : ''}
     </div>
     ${details ? `<div class="detail-grid">${details}</div>` : ''}
     ${skillsHtml}
@@ -1160,8 +1160,8 @@ function builtConfig() {
   const conf = { fields };
 
   // Metadata
-  if (document.getElementById('incConf').checked) conf.include_confidence = true;
-  if (document.getElementById('incProv').checked) conf.include_provenance = true;
+  conf.include_confidence = document.getElementById('incConf').checked;
+  conf.include_provenance = document.getElementById('incProv').checked;
 
   // On missing
   const missing = document.getElementById('onMissing').value;
