@@ -1,6 +1,6 @@
 # Multi-Source Candidate Data Transformer
 
-**Demo Video Link:** `[INSERT YOUR YOUTUBE/LOOM LINK HERE]`
+**Live Demo URL:** https://customer-data-transformer.onrender.com/
 
 Turns messy multi-source candidate data (recruiter CSV, ATS JSON, resume PDF/TXT) into one clean, normalized, deduplicated profile per person -- with provenance, confidence, and a runtime-configurable output shape.
 
@@ -25,9 +25,9 @@ python main.py --csv samples/recruiter.csv \
 ```
 *Note: Every source is optional -- you can pass any subset.*
 
-## Web App / Visual Config Builder (localhost)
+## Web App / Visual Config Builder
 
-For the best experience evaluating the pipeline, run the web UI:
+Try the live application instantly at **[https://customer-data-transformer.onrender.com/](https://customer-data-transformer.onrender.com/)**, or run it locally:
 
 ```bash
 pip install -r requirements.txt
